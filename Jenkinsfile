@@ -36,7 +36,16 @@ pipeline{
 			}
 		}
 	}
-
+               stage('Pull') {
+                                sh 'docker pull akank12/nodeapp_test:latest'
+                         }
+               }
+      }
+               stage('Run') {
+                                sh 'docker run -d --name nodecont -p 3001:3000 akank12/nodeapp_test:latest'
+                        }
+               }
+    }
 	post {
 		always {
 			sh 'docker logout'
