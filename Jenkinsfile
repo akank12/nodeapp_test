@@ -35,13 +35,17 @@ pipeline{
 				sh 'docker push akank12/nodeapp_test:latest'
 			}
 		}
-	}
+	
                stage('Pull') {
+                         
+                       steps {     
                                 sh 'docker pull akank12/nodeapp_test:latest'
                          }
                }
-      }
+      
                stage('Run') {
+                      
+                       steps {   
                                 sh 'docker run -d --name nodecont -p 3001:3000 akank12/nodeapp_test:latest'
                         }
                }
