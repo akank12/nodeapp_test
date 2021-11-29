@@ -1,6 +1,6 @@
 pipeline{
 
-	agent {label 'master'}
+	agent {label 'devopsvm2'}
 
 	environment {
 		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
