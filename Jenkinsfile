@@ -1,59 +1,49 @@
-pipeline{
+pipeline {
 
-	agent {label 'devopsvm2'}
+  environment {
+    dockerimagename = "thetips4you/nodeapp"
+    dockerImage = ""
+  }
 
-	environment {
-		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
-	}
+  agent any 
 
-	stages {
-	    
-	    stage('gitclone') {
+  stages {
 
-			steps {
-				git 'https://github.com/akank12/nodeapp_test.git'
-			}
-		}
-
-		stage('Build') {
-
-			steps {
-				sh 'docker build -t akank12/nodeapp_test:latest .'
-			}
-		}
-
-		stage('Login') {
-
-			steps {
-				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-			}
-		}
-
-		stage('Push') {
-
-			steps {
-				sh 'docker push akank12/nodeapp_test:latest'
-			}
-		}
-	
-               stage('Pull') {
-                         
-                       steps {     
-                                sh 'docker pull akank12/nodeapp_test:latest'
-                         }
-               }
-      
-               stage('Run') {
-                      
-                       steps {   
-                                sh 'docker run -d --name nodecont -p 3001:3000 akank12/nodeapp_test:latest'
-                        }
-               }
+    stage('Checkout Source') {
+      steps {
+        git 'https://github.com/akank12/nodeapp_test.git'
+      }
     }
-	post {
-		always {
-			sh 'docker logout'
-		}
-	}
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
+        }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'dockerhublogin'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
+        }
+      }
+    }
+
+    stage('Deploying App to Kubernetes') {
+      steps {
+        script {
+          kubernetesDeploy(configs: "deploymentservice.yml", kubeconfigId: "kubernetes")
+        }
+      }
+    }
+
+  }
 
 }
